@@ -20,8 +20,14 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  return {
+    width,
+    height,
+    getArea() {
+      return width * height;
+    },
+  };
 }
 
 
@@ -35,8 +41,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +57,8 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  return Object.setPrototypeOf(JSON.parse(json), proto);
 }
 
 
@@ -110,36 +116,93 @@ function fromJSON(/* proto, json */) {
  *  For more examples see unit tests.
  */
 
+const elementsOrder = ['element', 'id', 'class', 'attr', 'pseudoClass', 'pseudoElement'];
+
+class MySuperBaseElementSelector {
+  constructor() {
+    this.selector = '';
+    this.selHistory = [];
+  }
+
+  element(value) {
+    this.checkOrder('element');
+    this.selector += value;
+    return this;
+  }
+
+  id(value) {
+    this.checkOrder('id');
+    this.selector += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.checkOrder('class');
+    this.selector += `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    this.checkOrder('attr');
+    this.selector += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.checkOrder('pseudoClass');
+    this.selector += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.checkOrder('pseudoElement');
+    this.selector += `::${value}`;
+    return this;
+  }
+
+  checkOrder(selector) {
+    if (['element', 'id', 'pseudoElement'].indexOf(selector) >= 0 && this.selHistory.indexOf(selector) >= 0) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    } else if (elementsOrder.indexOf(this.selHistory[this.selHistory.length - 1])
+      > elementsOrder.indexOf(selector)) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    } else if (this.selHistory.indexOf(selector) < 0) {
+      this.selHistory.push(selector);
+    }
+  }
+
+  stringify() {
+    return this.selector;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new MySuperBaseElementSelector().element(value);
   },
-
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new MySuperBaseElementSelector().id(value);
   },
-
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new MySuperBaseElementSelector().class(value);
   },
-
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new MySuperBaseElementSelector().attr(value);
   },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new MySuperBaseElementSelector().pseudoClass(value);
   },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new MySuperBaseElementSelector().pseudoElement(value);
   },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.selector} ${combinator} ${selector2.selector}`;
+    return this;
+  },
+  stringify() {
+    return this.selector;
   },
 };
-
 
 module.exports = {
   Rectangle,
